@@ -8,185 +8,156 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:wght@300;400;600;800&display=swap');
-        
-        :root { --vercel-pink: #ff0080; --vercel-blue: #0070f3; }
         body { background: #000; color: #fafafa; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .mono { font-family: 'Geist Mono', monospace; }
-
-        /* Vercel-style focus rings and borders */
-        .glass { 
-            background: rgba(255, 255, 255, 0.02); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(20px); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .glass:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.04); }
-
-        /* Anti-Gravity Keyframes */
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(10px, -20px) rotate(1deg); }
-            66% { transform: translate(-10px, -10px) rotate(-1deg); }
-        }
+        .glass { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
+        @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-10px, -15px); } }
         .antigravity { animation: float 10s ease-in-out infinite; }
-        
-        .shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 3s infinite;
-        }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body x-data="{ 
-    page: 'home', 
-    deploying: false, 
-    progress: 0, 
-    logs: [],
-    status: 'Ready to Deploy',
-    startDeploy() {
-        this.deploying = true;
-        this.status = 'Building...';
-        this.logs = ['> Initializing Harmony engine...', '> Fetching repository...', '> Optimizing assets...'];
-        let interval = setInterval(() => {
-            if (this.progress < 100) {
-                this.progress += Math.random() * 15;
-                if(this.progress > 40 && this.logs.length < 4) this.logs.push('> Applying anti-gravity CSS...');
-                if(this.progress > 80 && this.logs.length < 5) this.logs.push('> Verifying checksums...');
-            } else {
-                this.progress = 100;
-                this.status = 'Live';
-                this.logs.push('> Deployment successful: harmony-web.vercel.app');
-                clearInterval(interval);
-                setTimeout(() => { this.deploying = false; }, 2000);
-            }
-        }, 600);
-    }
-}" class="min-h-screen">
+<body x-data="harmonyEngine" class="min-h-screen">
 
     <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="antigravity absolute top-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full"></div>
-        <div class="antigravity absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-purple-500/5 blur-[120px] rounded-full" style="animation-delay: -5s;"></div>
+        <div class="antigravity absolute top-[-5%] left-[10%] w-[400px] h-[400px] bg-blue-600/10 blur-[100px] rounded-full"></div>
+        <div class="antigravity absolute bottom-[-5%] right-[10%] w-[400px] h-[400px] bg-purple-600/10 blur-[100px] rounded-full" style="animation-delay: -5s;"></div>
     </div>
 
     <nav class="fixed top-8 left-1/2 -translate-x-1/2 z-50 glass px-2 py-1.5 rounded-full flex gap-1">
-        <template x-for="item in ['home', 'dashboard', 'settings']">
-            <button @click="page = item" 
-                :class="page === item ? 'bg-white text-black' : 'text-gray-400 hover:text-white'"
-                class="px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-300 capitalize"
-                x-text="item">
-            </button>
-        </template>
+        <button @click="page = 'home'" :class="page === 'home' ? 'bg-white text-black' : 'text-gray-400'" class="px-5 py-1.5 rounded-full text-sm font-medium transition">Home</button>
+        <button @click="page = 'dashboard'" :class="page === 'dashboard' ? 'bg-white text-black' : 'text-gray-400'" class="px-5 py-1.5 rounded-full text-sm font-medium transition">Dashboard</button>
     </nav>
 
     <main class="relative z-10 pt-32 px-6 flex flex-col items-center">
         
-        <section x-show="page === 'home'" x-transition x-cloak class="max-w-4xl text-center">
-            <div class="mb-4 inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 text-[10px] tracking-widest uppercase text-gray-400">
-                <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                Vercel x Google Physics
+        <section x-show="page === 'home'" x-transition class="w-full max-w-xl">
+            <div class="text-center mb-12">
+                <h1 class="text-6xl font-extrabold tracking-tighter mb-4 antigravity">Harmony</h1>
+                <p class="text-gray-400">Deploy your vision to the edge in seconds.</p>
             </div>
-            <h1 class="text-7xl md:text-[120px] font-extrabold tracking-tighter leading-none mb-8 antigravity">
-                Harmony<span class="text-blue-500">.</span>
-            </h1>
-            <p class="text-gray-400 text-lg md:text-2xl font-light mb-10 max-w-2xl mx-auto">
-                The first deployment platform where code literally floats. Zero configuration, zero gravity.
-            </p>
-            <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
-                <button @click="page = 'dashboard'" class="px-10 py-4 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition-all w-full md:w-auto">
-                    Start Deploying
-                </button>
-                <div class="text-gray-600 mono text-xs">npm i @harmony/core</div>
-            </div>
-        </section>
 
-        <section x-show="page === 'dashboard'" x-transition x-cloak class="w-full max-w-5xl space-y-6">
-            <div class="flex justify-between items-end mb-4">
+            <div class="glass p-8 rounded-3xl space-y-6">
                 <div>
-                    <h2 class="text-2xl font-bold">Project Console</h2>
-                    <p class="text-gray-500 text-sm">harmony-production-v2</p>
+                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2 font-bold">Project Name</label>
+                    <input type="text" x-model="projectName" placeholder="my-awesome-app" 
+                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition">
                 </div>
-                <div :class="status === 'Live' ? 'text-green-400' : 'text-blue-400'" class="mono text-xs uppercase tracking-widest" x-text="status"></div>
+
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2 font-bold">Import Files</label>
+                    <div @click="$refs.fileInput.click()" class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-white/30 cursor-pointer transition relative overflow-hidden">
+                        <input type="file" x-ref="fileInput" @change="handleFiles" class="hidden" multiple>
+                        <template x-if="files.length === 0">
+                            <div class="text-gray-500 text-sm">Click to upload or drag files here</div>
+                        </template>
+                        <template x-if="files.length > 0">
+                            <div class="text-blue-400 text-sm font-medium" x-text="`${files.length} files selected`"></div>
+                        </template>
+                    </div>
+                </div>
+
+                <button @click="deploy" :disabled="!projectName || files.length === 0 || deploying"
+                    class="w-full py-4 bg-white text-black rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition disabled:opacity-20">
+                    <span x-text="deploying ? 'Deploying...' : 'Deploy on Web'"></span>
+                </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="md:col-span-2 glass p-8 rounded-3xl relative overflow-hidden">
-                    <div x-show="deploying" class="absolute top-0 left-0 h-1 bg-blue-500 transition-all duration-500" :style="`width: ${progress}%`"></div>
-                    <h3 class="text-lg font-semibold mb-6">Active Production</h3>
-                    
-                    <div class="flex items-center gap-6">
-                        <div class="h-24 w-24 rounded-2xl bg-gradient-to-br from-gray-800 to-black border border-white/10 flex items-center justify-center antigravity">
-                            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-sm text-gray-500 mb-1">Main Branch</div>
-                            <div class="text-xl font-medium mb-4">feat/antigravity-ui</div>
-                            <button @click="startDeploy" :disabled="deploying" class="px-4 py-2 glass rounded-md text-xs hover:border-white/40 disabled:opacity-50">
-                                <span x-text="deploying ? 'Deploying...' : 'Redeploy Now'"></span>
-                            </button>
-                        </div>
+            <div x-show="deploying" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+                <div class="w-full max-w-md glass p-8 rounded-3xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="text-lg font-bold" x-text="statusMsg"></div>
+                        <div class="mono text-blue-500" x-text="`${progress}%`"></div>
                     </div>
-
-                    <div class="mt-8 bg-black/40 rounded-xl p-4 mono text-[11px] text-gray-500 space-y-1 h-32 overflow-y-auto border border-white/5">
+                    <div class="w-full h-1 bg-white/10 rounded-full mb-8 overflow-hidden">
+                        <div class="h-full bg-blue-500 transition-all duration-300" :style="`width: ${progress}%`"></div>
+                    </div>
+                    <div class="bg-black p-4 rounded-xl mono text-[10px] text-gray-500 h-32 overflow-y-auto space-y-1">
                         <template x-for="log in logs">
-                            <div x-text="log" class="shimmer"></div>
+                            <div x-text="log"></div>
                         </template>
-                        <div x-show="!logs.length">Ready to receive instructions...</div>
-                    </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="glass p-6 rounded-3xl antigravity" style="animation-delay: 1s;">
-                        <div class="text-xs text-gray-500 uppercase mb-2">Edge Latency</div>
-                        <div class="text-4xl font-bold">14<span class="text-blue-500 text-lg">ms</span></div>
-                    </div>
-                    <div class="glass p-6 rounded-3xl antigravity" style="animation-delay: 1.5s;">
-                        <div class="text-xs text-gray-500 uppercase mb-2">Memory Usage</div>
-                        <div class="text-4xl font-bold">0.4<span class="text-pink-500 text-lg">gb</span></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section x-show="page === 'settings'" x-transition x-cloak class="w-full max-w-2xl glass rounded-3xl p-8">
-            <h2 class="text-2xl font-bold mb-8">Environment Settings</h2>
-            <div class="space-y-8">
-                <div class="flex justify-between items-center group">
-                    <div>
-                        <div class="font-medium group-hover:text-blue-400 transition">Physics Engine</div>
-                        <div class="text-sm text-gray-500">Use GPU acceleration for floating UI.</div>
+        <section x-show="page === 'dashboard'" x-transition class="w-full max-w-4xl">
+            <h2 class="text-3xl font-bold mb-8">Deployments</h2>
+            
+            <div class="grid gap-4">
+                <template x-if="deployments.length === 0">
+                    <div class="glass p-12 rounded-3xl text-center text-gray-500">No deployments found. Start on the home screen.</div>
+                </template>
+                <template x-for="d in deployments" :key="d.id">
+                    <div class="glass p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center group">
+                        <div>
+                            <div class="flex items-center gap-3 mb-1">
+                                <span class="font-bold text-lg" x-text="d.name"></span>
+                                <span class="text-[10px] px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full uppercase font-bold">Ready</span>
+                            </div>
+                            <a :href="'https://' + d.url" target="_blank" class="text-blue-400 hover:underline mono text-sm" x-text="d.url"></a>
+                        </div>
+                        <div class="text-gray-500 text-xs mt-4 md:mt-0" x-text="d.date"></div>
                     </div>
-                    <div class="w-10 h-5 bg-blue-600 rounded-full flex items-center px-1">
-                        <div class="w-3 h-3 bg-white rounded-full translate-x-5"></div>
-                    </div>
-                </div>
-                <div class="flex justify-between items-center group">
-                    <div>
-                        <div class="font-medium group-hover:text-pink-400 transition">Analytics</div>
-                        <div class="text-sm text-gray-500">Track user interactions in 3D space.</div>
-                    </div>
-                    <div class="w-10 h-5 bg-gray-800 rounded-full flex items-center px-1">
-                        <div class="w-3 h-3 bg-gray-500 rounded-full"></div>
-                    </div>
-                </div>
-                <button class="w-full py-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition text-red-500 text-sm font-semibold">
-                    Delete Workspace
-                </button>
+                </template>
             </div>
         </section>
     </main>
 
     <script>
-        document.addEventListener('mousemove', (e) => {
-            const amount = 15;
-            const x = (e.clientX - window.innerWidth / 2) / amount;
-            const y = (e.clientY - window.innerHeight / 2) / amount;
-            
-            document.querySelectorAll('.antigravity').forEach(el => {
-                el.style.transform = `translate(${x}px, ${y}px)`;
-            });
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('harmonyEngine', () => ({
+                page: 'home',
+                projectName: '',
+                files: [],
+                deploying: false,
+                progress: 0,
+                statusMsg: 'Initializing',
+                logs: [],
+                deployments: JSON.parse(localStorage.getItem('harmony_deploys') || '[]'),
+
+                handleFiles(e) {
+                    this.files = Array.from(e.target.files);
+                },
+
+                async deploy() {
+                    this.deploying = true;
+                    this.progress = 0;
+                    this.logs = [`> Compiling project: ${this.projectName}`];
+                    
+                    const steps = [
+                        { p: 20, m: 'Analyzing File Structure', l: '> Found ' + this.files.length + ' assets' },
+                        { p: 45, m: 'Optimizing for Edge', l: '> Minifying scripts & images' },
+                        { p: 70, m: 'Assigning DNS', l: '> Creating harmony.app record' },
+                        { p: 100, m: 'Live', l: '> Propagation complete' }
+                    ];
+
+                    for (let step of steps) {
+                        await new Promise(r => setTimeout(r, 800));
+                        this.progress = step.p;
+                        this.statusMsg = step.m;
+                        this.logs.push(step.l);
+                    }
+
+                    // Create the "Real" Deployment Object
+                    const newUrl = `${this.projectName.toLowerCase().replace(/\s+/g, '-')}-${Math.random().toString(36).substring(7)}.harmony.app`;
+                    const deployObj = {
+                        id: Date.now(),
+                        name: this.projectName,
+                        url: newUrl,
+                        date: new Date().toLocaleString()
+                    };
+
+                    this.deployments.unshift(deployObj);
+                    localStorage.setItem('harmony_deploys', JSON.stringify(this.deployments));
+                    
+                    setTimeout(() => {
+                        this.deploying = false;
+                        this.page = 'dashboard';
+                        this.projectName = '';
+                        this.files = [];
+                    }, 1000);
+                }
+            }));
         });
     </script>
 </body>
