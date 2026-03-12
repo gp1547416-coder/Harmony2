@@ -3,159 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harmony | Anti-Gravity Cloud</title>
+    <title>Harmony | Instant Deploy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:wght@300;400;600;800&display=swap');
-        body { background: #000; color: #fafafa; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body { background: #000; color: #fafafa; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .mono { font-family: 'Geist Mono', monospace; }
-        .glass { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
-        @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-10px, -15px); } }
-        .antigravity { animation: float 10s ease-in-out infinite; }
+        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); }
+        .editor { background: #0a0a0a; border: 1px solid #222; color: #3b82f6; font-family: 'Geist Mono', monospace; }
         [x-cloak] { display: none !important; }
+        
+        /* Anti-gravity touch */
+        .float-slow { animation: float 8s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
-<body x-data="harmonyEngine" class="min-h-screen">
+<body x-data="harmonyCloud">
 
-    <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="antigravity absolute top-[-5%] left-[10%] w-[400px] h-[400px] bg-blue-600/10 blur-[100px] rounded-full"></div>
-        <div class="antigravity absolute bottom-[-5%] right-[10%] w-[400px] h-[400px] bg-purple-600/10 blur-[100px] rounded-full" style="animation-delay: -5s;"></div>
-    </div>
-
-    <nav class="fixed top-8 left-1/2 -translate-x-1/2 z-50 glass px-2 py-1.5 rounded-full flex gap-1">
-        <button @click="page = 'home'" :class="page === 'home' ? 'bg-white text-black' : 'text-gray-400'" class="px-5 py-1.5 rounded-full text-sm font-medium transition">Home</button>
-        <button @click="page = 'dashboard'" :class="page === 'dashboard' ? 'bg-white text-black' : 'text-gray-400'" class="px-5 py-1.5 rounded-full text-sm font-medium transition">Dashboard</button>
+    <nav class="fixed top-0 w-full z-50 glass border-b border-white/5 px-6 py-4 flex justify-between items-center">
+        <div class="font-black text-xl tracking-tighter float-slow">Harmony<span class="text-blue-500">.</span></div>
+        <div class="flex gap-4">
+            <button @click="view = 'editor'" :class="view === 'editor' ? 'text-white' : 'text-gray-500'" class="text-xs uppercase font-bold tracking-widest">Editor</button>
+            <button @click="view = 'projects'" :class="view === 'projects' ? 'text-white' : 'text-gray-500'" class="text-xs uppercase font-bold tracking-widest">Deployments</button>
+        </div>
     </nav>
 
-    <main class="relative z-10 pt-32 px-6 flex flex-col items-center">
+    <main class="pt-24 pb-12 px-6 max-w-2xl mx-auto">
         
-        <section x-show="page === 'home'" x-transition class="w-full max-w-xl">
-            <div class="text-center mb-12">
-                <h1 class="text-6xl font-extrabold tracking-tighter mb-4 antigravity">Harmony</h1>
-                <p class="text-gray-400">Deploy your vision to the edge in seconds.</p>
+        <div x-show="view === 'editor'" x-transition>
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-1">Create New Deployment</h2>
+                <p class="text-gray-500 text-sm">Paste your HTML below to ship it to the edge.</p>
             </div>
 
-            <div class="glass p-8 rounded-3xl space-y-6">
-                <div>
-                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2 font-bold">Project Name</label>
-                    <input type="text" x-model="projectName" placeholder="my-awesome-app" 
-                        class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition">
+            <div class="space-y-4">
+                <div class="glass p-4 rounded-xl">
+                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-2">Filename</label>
+                    <input type="text" x-model="filename" placeholder="index.html" 
+                        class="w-full bg-transparent border-none outline-none text-blue-400 mono">
                 </div>
 
-                <div>
-                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2 font-bold">Import Files</label>
-                    <div @click="$refs.fileInput.click()" class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-white/30 cursor-pointer transition relative overflow-hidden">
-                        <input type="file" x-ref="fileInput" @change="handleFiles" class="hidden" multiple>
-                        <template x-if="files.length === 0">
-                            <div class="text-gray-500 text-sm">Click to upload or drag files here</div>
-                        </template>
-                        <template x-if="files.length > 0">
-                            <div class="text-blue-400 text-sm font-medium" x-text="`${files.length} files selected`"></div>
-                        </template>
-                    </div>
+                <div class="relative">
+                    <label class="absolute top-3 right-4 text-[10px] text-gray-600 uppercase font-bold pointer-events-none">HTML Source</label>
+                    <textarea x-model="rawCode" placeholder="<html>...</html>" 
+                        class="w-full h-80 editor rounded-2xl p-6 outline-none focus:border-blue-500/50 transition resize-none text-sm"></textarea>
                 </div>
 
-                <button @click="deploy" :disabled="!projectName || files.length === 0 || deploying"
-                    class="w-full py-4 bg-white text-black rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition disabled:opacity-20">
-                    <span x-text="deploying ? 'Deploying...' : 'Deploy on Web'"></span>
+                <button @click="deployCode" :disabled="!rawCode || !filename"
+                    class="w-full py-4 bg-white text-black rounded-2xl font-black text-lg active:scale-95 transition disabled:opacity-20 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                    Deploy on Web
                 </button>
             </div>
+        </div>
 
-            <div x-show="deploying" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-6">
-                <div class="w-full max-w-md glass p-8 rounded-3xl">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="text-lg font-bold" x-text="statusMsg"></div>
-                        <div class="mono text-blue-500" x-text="`${progress}%`"></div>
-                    </div>
-                    <div class="w-full h-1 bg-white/10 rounded-full mb-8 overflow-hidden">
-                        <div class="h-full bg-blue-500 transition-all duration-300" :style="`width: ${progress}%`"></div>
-                    </div>
-                    <div class="bg-black p-4 rounded-xl mono text-[10px] text-gray-500 h-32 overflow-y-auto space-y-1">
-                        <template x-for="log in logs">
-                            <div x-text="log"></div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section x-show="page === 'dashboard'" x-transition class="w-full max-w-4xl">
-            <h2 class="text-3xl font-bold mb-8">Deployments</h2>
-            
+        <div x-show="view === 'projects'" x-transition x-cloak>
+            <h2 class="text-2xl font-bold mb-6">Active Deploys</h2>
             <div class="grid gap-4">
-                <template x-if="deployments.length === 0">
-                    <div class="glass p-12 rounded-3xl text-center text-gray-500">No deployments found. Start on the home screen.</div>
-                </template>
-                <template x-for="d in deployments" :key="d.id">
-                    <div class="glass p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center group">
+                <template x-for="project in deployments" :key="project.id">
+                    <div class="glass p-5 rounded-2xl flex justify-between items-center group hover:border-blue-500/30 transition">
                         <div>
-                            <div class="flex items-center gap-3 mb-1">
-                                <span class="font-bold text-lg" x-text="d.name"></span>
-                                <span class="text-[10px] px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full uppercase font-bold">Ready</span>
+                            <div class="font-bold flex items-center gap-2">
+                                <span x-text="project.name"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                             </div>
-                            <a :href="'https://' + d.url" target="_blank" class="text-blue-400 hover:underline mono text-sm" x-text="d.url"></a>
+                            <div class="text-[10px] text-gray-500 mono" x-text="project.url"></div>
                         </div>
-                        <div class="text-gray-500 text-xs mt-4 md:mt-0" x-text="d.date"></div>
+                        <button @click="launch(project.code)" class="text-blue-500 font-bold text-sm bg-blue-500/10 px-4 py-2 rounded-lg">Open</button>
                     </div>
                 </template>
+                <template x-if="deployments.length === 0">
+                    <div class="py-20 text-center text-gray-600 italic">No deployments found.</div>
+                </template>
             </div>
-        </section>
+        </div>
     </main>
+
+    <div x-show="isDeploying" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-10" x-cloak>
+        <div class="w-20 h-20 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-6"></div>
+        <p class="mono text-xs text-gray-500 uppercase tracking-[0.2em]">Propagating to Global Edge...</p>
+    </div>
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('harmonyEngine', () => ({
-                page: 'home',
-                projectName: '',
-                files: [],
-                deploying: false,
-                progress: 0,
-                statusMsg: 'Initializing',
-                logs: [],
-                deployments: JSON.parse(localStorage.getItem('harmony_deploys') || '[]'),
+            Alpine.data('harmonyCloud', () => ({
+                view: 'editor',
+                filename: 'index.html',
+                rawCode: '',
+                isDeploying: false,
+                deployments: JSON.parse(localStorage.getItem('harmony_v3') || '[]'),
 
-                handleFiles(e) {
-                    this.files = Array.from(e.target.files);
-                },
-
-                async deploy() {
-                    this.deploying = true;
-                    this.progress = 0;
-                    this.logs = [`> Compiling project: ${this.projectName}`];
+                async deployCode() {
+                    this.isDeploying = true;
                     
-                    const steps = [
-                        { p: 20, m: 'Analyzing File Structure', l: '> Found ' + this.files.length + ' assets' },
-                        { p: 45, m: 'Optimizing for Edge', l: '> Minifying scripts & images' },
-                        { p: 70, m: 'Assigning DNS', l: '> Creating harmony.app record' },
-                        { p: 100, m: 'Live', l: '> Propagation complete' }
-                    ];
+                    // Simulate build time
+                    await new Promise(r => setTimeout(r, 1500));
 
-                    for (let step of steps) {
-                        await new Promise(r => setTimeout(r, 800));
-                        this.progress = step.p;
-                        this.statusMsg = step.m;
-                        this.logs.push(step.l);
-                    }
-
-                    // Create the "Real" Deployment Object
-                    const newUrl = `${this.projectName.toLowerCase().replace(/\s+/g, '-')}-${Math.random().toString(36).substring(7)}.harmony.app`;
-                    const deployObj = {
-                        id: Date.now(),
-                        name: this.projectName,
-                        url: newUrl,
-                        date: new Date().toLocaleString()
+                    const newId = Date.now();
+                    const newProj = {
+                        id: newId,
+                        name: this.filename,
+                        code: this.rawCode,
+                        url: `${this.filename.split('.')[0]}-${Math.random().toString(36).slice(2,7)}.harmony.app`
                     };
 
-                    this.deployments.unshift(deployObj);
-                    localStorage.setItem('harmony_deploys', JSON.stringify(this.deployments));
+                    this.deployments.unshift(newProj);
+                    localStorage.setItem('harmony_v3', JSON.stringify(this.deployments));
                     
-                    setTimeout(() => {
-                        this.deploying = false;
-                        this.page = 'dashboard';
-                        this.projectName = '';
-                        this.files = [];
-                    }, 1000);
+                    this.isDeploying = false;
+                    this.view = 'projects';
+                    
+                    // Automatically launch the one we just made
+                    this.launch(this.rawCode);
+                    
+                    // Reset editor
+                    this.rawCode = '';
+                    this.filename = 'index.html';
+                },
+
+                launch(code) {
+                    // This is the "Magic" part: 
+                    // It turns your text into a real browser-readable file link
+                    const blob = new Blob([code], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
                 }
             }));
         });
