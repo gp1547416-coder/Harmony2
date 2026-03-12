@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harmony | Instant Deploy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmony | Cloud Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -14,7 +14,6 @@
         .editor { background: #0a0a0a; border: 1px solid #222; color: #3b82f6; font-family: 'Geist Mono', monospace; }
         [x-cloak] { display: none !important; }
         
-        /* Anti-gravity touch */
         .float-slow { animation: float 8s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
@@ -23,36 +22,38 @@
 
     <nav class="fixed top-0 w-full z-50 glass border-b border-white/5 px-6 py-4 flex justify-between items-center">
         <div class="font-black text-xl tracking-tighter float-slow">Harmony<span class="text-blue-500">.</span></div>
-        <div class="flex gap-4">
-            <button @click="view = 'editor'" :class="view === 'editor' ? 'text-white' : 'text-gray-500'" class="text-xs uppercase font-bold tracking-widest">Editor</button>
-            <button @click="view = 'projects'" :class="view === 'projects' ? 'text-white' : 'text-gray-500'" class="text-xs uppercase font-bold tracking-widest">Deployments</button>
+        <div class="flex gap-6">
+            <button @click="setEditor()" :class="view === 'editor' ? 'text-white' : 'text-gray-500'" class="text-[10px] uppercase font-bold tracking-[0.2em]">Editor</button>
+            <button @click="view = 'projects'" :class="view === 'projects' ? 'text-white' : 'text-gray-500'" class="text-[10px] uppercase font-bold tracking-[0.2em]">Deployments</button>
         </div>
     </nav>
 
-    <main class="pt-24 pb-12 px-6 max-w-2xl mx-auto">
+    <main class="pt-24 pb-24 px-6 max-w-2xl mx-auto">
         
         <div x-show="view === 'editor'" x-transition>
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold mb-1">Create New Deployment</h2>
-                <p class="text-gray-500 text-sm">Paste your HTML below to ship it to the edge.</p>
+            <div class="mb-6 flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl font-extrabold tracking-tight" x-text="editingId ? 'Edit Deploy' : 'New Deploy'"></h2>
+                    <p class="text-gray-500 text-sm" x-text="editingId ? 'Modifying existing production...' : 'Ship a new project to the edge.'"></p>
+                </div>
+                <template x-if="editingId">
+                    <button @click="cancelEdit" class="text-xs text-red-500 font-bold mb-1">Cancel</button>
+                </template>
             </div>
 
             <div class="space-y-4">
-                <div class="glass p-4 rounded-xl">
-                    <label class="block text-[10px] text-gray-500 uppercase font-bold mb-2">Filename</label>
-                    <input type="text" x-model="filename" placeholder="index.html" 
-                        class="w-full bg-transparent border-none outline-none text-blue-400 mono">
+                <div class="glass p-4 rounded-2xl">
+                    <label class="block text-[10px] text-gray-600 uppercase font-bold mb-1">Filename</label>
+                    <input type="text" x-model="filename" class="w-full bg-transparent border-none outline-none text-blue-400 mono text-lg">
                 </div>
 
                 <div class="relative">
-                    <label class="absolute top-3 right-4 text-[10px] text-gray-600 uppercase font-bold pointer-events-none">HTML Source</label>
-                    <textarea x-model="rawCode" placeholder="<html>...</html>" 
-                        class="w-full h-80 editor rounded-2xl p-6 outline-none focus:border-blue-500/50 transition resize-none text-sm"></textarea>
+                    <textarea x-model="rawCode" class="w-full h-96 editor rounded-3xl p-6 outline-none focus:border-blue-500/40 transition resize-none text-sm"></textarea>
                 </div>
 
                 <button @click="deployCode" :disabled="!rawCode || !filename"
-                    class="w-full py-4 bg-white text-black rounded-2xl font-black text-lg active:scale-95 transition disabled:opacity-20 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                    Deploy on Web
+                    class="w-full py-5 bg-white text-black rounded-2xl font-black text-lg active:scale-95 transition disabled:opacity-20 shadow-2xl">
+                    <span x-text="editingId ? 'Redeploy Changes' : 'Deploy on Web'"></span>
                 </button>
             </div>
         </div>
@@ -61,27 +62,32 @@
             <h2 class="text-2xl font-bold mb-6">Active Deploys</h2>
             <div class="grid gap-4">
                 <template x-for="project in deployments" :key="project.id">
-                    <div class="glass p-5 rounded-2xl flex justify-between items-center group hover:border-blue-500/30 transition">
-                        <div>
-                            <div class="font-bold flex items-center gap-2">
-                                <span x-text="project.name"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                    <div class="glass p-5 rounded-2xl border border-white/5">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="overflow-hidden">
+                                <div class="font-bold flex items-center gap-2 truncate text-lg">
+                                    <span x-text="project.name"></span>
+                                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                </div>
+                                <div class="text-[10px] text-gray-600 mono truncate" x-text="project.url"></div>
                             </div>
-                            <div class="text-[10px] text-gray-500 mono" x-text="project.url"></div>
+                            <button @click="deleteProject(project.id)" class="text-gray-700 hover:text-red-500 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+                            </button>
                         </div>
-                        <button @click="launch(project.code)" class="text-blue-500 font-bold text-sm bg-blue-500/10 px-4 py-2 rounded-lg">Open</button>
+                        <div class="flex gap-2">
+                            <button @click="launch(project.code)" class="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl text-xs font-bold transition">View Live</button>
+                            <button @click="editProject(project)" class="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 py-3 rounded-xl text-xs font-bold transition">Edit Code</button>
+                        </div>
                     </div>
-                </template>
-                <template x-if="deployments.length === 0">
-                    <div class="py-20 text-center text-gray-600 italic">No deployments found.</div>
                 </template>
             </div>
         </div>
     </main>
 
-    <div x-show="isDeploying" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-10" x-cloak>
-        <div class="w-20 h-20 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-6"></div>
-        <p class="mono text-xs text-gray-500 uppercase tracking-[0.2em]">Propagating to Global Edge...</p>
+    <div x-show="isDeploying" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center" x-cloak>
+        <div class="w-10 h-10 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <p class="mono text-[10px] text-gray-500 uppercase tracking-[0.3em]">Updating Production...</p>
     </div>
 
     <script>
@@ -90,43 +96,75 @@
                 view: 'editor',
                 filename: 'index.html',
                 rawCode: '',
+                editingId: null,
                 isDeploying: false,
-                deployments: JSON.parse(localStorage.getItem('harmony_v3') || '[]'),
+                deployments: JSON.parse(localStorage.getItem('harmony_v4') || '[]'),
+
+                setEditor() {
+                    this.view = 'editor';
+                },
+
+                editProject(project) {
+                    this.editingId = project.id;
+                    this.filename = project.name;
+                    this.rawCode = project.code;
+                    this.view = 'editor';
+                },
+
+                cancelEdit() {
+                    this.editingId = null;
+                    this.filename = 'index.html';
+                    this.rawCode = '';
+                    this.view = 'projects';
+                },
 
                 async deployCode() {
                     this.isDeploying = true;
-                    
-                    // Simulate build time
-                    await new Promise(r => setTimeout(r, 1500));
+                    await new Promise(r => setTimeout(r, 1200));
 
-                    const newId = Date.now();
-                    const newProj = {
-                        id: newId,
-                        name: this.filename,
-                        code: this.rawCode,
-                        url: `${this.filename.split('.')[0]}-${Math.random().toString(36).slice(2,7)}.harmony.app`
-                    };
+                    if (this.editingId) {
+                        // Redeploy Logic: Update the existing item
+                        const index = this.deployments.findIndex(p => p.id === this.editingId);
+                        this.deployments[index].name = this.filename;
+                        this.deployments[index].code = this.rawCode;
+                        // We keep the same URL but the launch() will create a fresh Blob
+                    } else {
+                        // New Deploy Logic
+                        const newProj = {
+                            id: Date.now(),
+                            name: this.filename,
+                            code: this.rawCode,
+                            url: `${this.filename.split('.')[0]}-${Math.random().toString(36).slice(2,7)}.harmony.app`
+                        };
+                        this.deployments.unshift(newProj);
+                    }
 
-                    this.deployments.unshift(newProj);
-                    localStorage.setItem('harmony_v3', JSON.stringify(this.deployments));
-                    
+                    localStorage.setItem('harmony_v4', JSON.stringify(this.deployments));
                     this.isDeploying = false;
-                    this.view = 'projects';
                     
-                    // Automatically launch the one we just made
+                    // Automatically show the new version
                     this.launch(this.rawCode);
                     
-                    // Reset editor
+                    // Reset
+                    this.editingId = null;
                     this.rawCode = '';
                     this.filename = 'index.html';
+                    this.view = 'projects';
+                },
+
+                deleteProject(id) {
+                    if(confirm('Delete permanently?')) {
+                        this.deployments = this.deployments.filter(p => p.id !== id);
+                        localStorage.setItem('harmony_v4', JSON.stringify(this.deployments));
+                    }
                 },
 
                 launch(code) {
-                    // This is the "Magic" part: 
-                    // It turns your text into a real browser-readable file link
                     const blob = new Blob([code], { type: 'text/html' });
                     const url = URL.createObjectURL(blob);
                     window.open(url, '_blank');
+                    // Note: URL.revokeObjectURL(url) could be used here to save memory, 
+                    // but we leave it active so the user can refresh the new tab once.
                 }
             }));
         });
