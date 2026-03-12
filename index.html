@@ -3,169 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Harmony | Cloud Studio</title>
+    <title>Harmony | Web Runtime</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:wght@300;400;600;800&display=swap');
-        body { background: #000; color: #fafafa; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: #000; color: #fafafa; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .mono { font-family: 'Geist Mono', monospace; }
-        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); }
-        .editor { background: #0a0a0a; border: 1px solid #222; color: #3b82f6; font-family: 'Geist Mono', monospace; }
+        .glass { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); }
+        .editor-area { background: #050505; color: #60a5fa; border: 1px solid #111; }
         [x-cloak] { display: none !important; }
-        .float-slow { animation: float 8s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        /* Animation for the "Ready" state */
+        .pulse-glow { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } }
     </style>
 </head>
-<body x-data="harmonyCloud">
+<body x-data="harmonyRuntime">
 
     <nav class="fixed top-0 w-full z-50 glass border-b border-white/5 px-6 py-4 flex justify-between items-center">
-        <div class="font-black text-xl tracking-tighter float-slow">Harmony<span class="text-blue-500">.</span></div>
-        <div class="flex gap-6 text-[10px] uppercase font-bold tracking-[0.2em]">
-            <button @click="view = 'editor'" :class="view === 'editor' ? 'text-white' : 'text-gray-500'">Editor</button>
-            <button @click="view = 'projects'" :class="view === 'projects' ? 'text-white' : 'text-gray-500'">Deployments</button>
+        <div class="font-black text-xl tracking-tighter">Harmony<span class="text-blue-500">.</span></div>
+        <div class="flex gap-4">
+            <button @click="view = 'editor'" :class="view === 'editor' ? 'text-white' : 'text-gray-500'" class="text-[10px] uppercase font-bold tracking-widest transition">Editor</button>
+            <button @click="view = 'archive'" :class="view === 'archive' ? 'text-white' : 'text-gray-500'" class="text-[10px] uppercase font-bold tracking-widest transition">Ships</button>
         </div>
     </nav>
 
-    <main class="pt-24 pb-24 px-6 max-w-2xl mx-auto">
+    <main class="pt-24 pb-20 px-6 max-w-2xl mx-auto">
         
         <div x-show="view === 'editor'" x-transition>
             <div class="mb-6 flex justify-between items-end">
                 <div>
-                    <h2 class="text-3xl font-extrabold tracking-tight" x-text="editingId ? 'Edit Project' : 'New Deploy'"></h2>
-                    <p class="text-gray-500 text-sm">Instant cloud-edge deployment.</p>
+                    <h1 class="text-3xl font-black" x-text="editingId ? 'Edit Draft' : 'New Ship'"></h1>
+                    <p class="text-gray-500 text-sm">Deploying to the Browser Runtime.</p>
                 </div>
                 <template x-if="editingId">
-                    <button @click="cancelEdit" class="text-xs text-red-500 font-bold mb-1">Cancel</button>
+                    <button @click="cancelEdit" class="text-xs text-red-500 font-bold mb-1 underline">Discard Edit</button>
                 </template>
             </div>
 
             <div class="space-y-4">
-                <input type="text" x-model="filename" class="w-full glass rounded-2xl px-6 py-4 outline-none focus:border-blue-500 transition text-blue-400 mono">
-                <textarea x-model="rawCode" class="w-full h-96 editor rounded-3xl p-6 outline-none focus:border-blue-500/40 transition text-sm"></textarea>
-                <button @click="deployCode" :disabled="!rawCode || !filename"
-                    class="w-full py-5 bg-white text-black rounded-2xl font-black text-lg active:scale-95 transition disabled:opacity-20">
+                <div class="glass p-4 rounded-2xl flex items-center">
+                    <span class="text-blue-500 mono mr-2">/</span>
+                    <input type="text" x-model="filename" placeholder="index.html" class="bg-transparent w-full outline-none mono text-blue-400">
+                </div>
+
+                <div class="relative group">
+                    <div class="absolute top-4 right-6 flex items-center gap-2">
+                        <span class="text-[9px] font-bold text-gray-700 uppercase">Static Web</span>
+                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500 pulse-glow"></div>
+                    </div>
+                    <textarea x-model="rawCode" placeholder="" 
+                        class="w-full h-80 editor-area rounded-3xl p-6 outline-none focus:border-blue-500/40 transition text-xs leading-relaxed mono"></textarea>
+                </div>
+
+                <button @click="deploy" :disabled="!rawCode || !filename"
+                    class="w-full py-5 bg-white text-black rounded-2xl font-black text-lg active:scale-95 transition-all disabled:opacity-20 shadow-xl">
                     Deploy on Web
                 </button>
             </div>
         </div>
 
-        <div x-show="view === 'projects'" x-transition x-cloak>
-            <h2 class="text-2xl font-bold mb-6">Active Deploys</h2>
-            <div class="grid gap-4">
-                <template x-for="project in deployments" :key="project.id">
-                    <div class="glass p-5 rounded-2xl border border-white/5">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="overflow-hidden">
-                                <div class="font-bold flex items-center gap-2 truncate text-lg" x-text="project.name"></div>
-                                <div class="text-[10px] text-gray-600 mono truncate" x-text="project.url"></div>
-                            </div>
-                            <button @click="deleteProject(project.id)" class="text-gray-700 hover:text-red-500 transition p-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
-                            </button>
+        <div x-show="view === 'archive'" x-transition x-cloak>
+            <h2 class="text-2xl font-bold mb-6">Active Deployments</h2>
+            <div class="space-y-4">
+                <template x-for="p in projects" :key="p.id">
+                    <div class="glass p-6 rounded-3xl border border-white/5 flex justify-between items-center group">
+                        <div class="overflow-hidden mr-4">
+                            <div class="font-bold truncate text-lg" x-text="p.name"></div>
+                            <div class="text-[10px] text-gray-500 mono truncate" x-text="p.url"></div>
                         </div>
                         <div class="flex gap-2">
-                            <button @click="launch(project.id)" class="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl text-xs font-bold transition">View Live</button>
-                            <button @click="editProject(project)" class="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 py-3 rounded-xl text-xs font-bold transition">Edit Code</button>
+                            <button @click="openProject(p)" class="px-4 py-2 bg-blue-500/10 text-blue-400 rounded-xl text-xs font-bold active:bg-blue-500/20">Open</button>
+                            <button @click="editProject(p)" class="px-4 py-2 bg-white/5 text-gray-400 rounded-xl text-xs font-bold">Edit</button>
+                            <button @click="deleteProject(p.id)" class="p-2 text-gray-800 hover:text-red-500 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+                            </button>
                         </div>
                     </div>
+                </template>
+                <template x-if="projects.length === 0">
+                    <div class="py-20 text-center text-gray-600 italic">No deployments yet.</div>
                 </template>
             </div>
         </div>
     </main>
 
-    <div x-show="isDeploying" class="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center" x-cloak>
-        <div class="w-10 h-10 border-2 border-white/10 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-        <p class="mono text-[10px] text-gray-500 uppercase tracking-[0.3em]">Syncing to Edge...</p>
+    <div x-show="previewMode" class="fixed inset-0 z-[100] bg-white flex flex-col" x-cloak x-transition>
+        <div class="bg-black p-4 flex justify-between items-center">
+            <button @click="closePreview" class="text-[10px] font-bold text-gray-500 uppercase">← Exit Preview</button>
+            <div class="text-[9px] mono text-blue-500 truncate px-4" x-text="activeProject?.url"></div>
+            <div class="flex gap-1.5">
+                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+            </div>
+        </div>
+        <iframe x-ref="viewport" class="w-full flex-1 border-none bg-white"></iframe>
+    </div>
+
+    <div x-show="isBuilding" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center" x-cloak x-transition>
+        <div class="w-10 h-10 border-2 border-white/5 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <p class="mono text-[10px] text-gray-500 uppercase tracking-[0.4em]">Compiling Assets...</p>
     </div>
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('harmonyCloud', () => ({
+            Alpine.data('harmonyRuntime', () => ({
                 view: 'editor',
                 filename: 'index.html',
                 rawCode: '',
                 editingId: null,
-                isDeploying: false,
-                deployments: JSON.parse(localStorage.getItem('harmony_v5') || '[]'),
-                urlRegistry: {}, // Stores active Blob URLs by Project ID
+                isBuilding: false,
+                previewMode: false,
+                activeProject: null,
+                projects: JSON.parse(localStorage.getItem('harmony_v10') || '[]'),
+                registry: {}, // Stores Blob URLs
 
-                editProject(project) {
-                    this.editingId = project.id;
-                    this.filename = project.name;
-                    this.rawCode = project.code;
+                async deploy() {
+                    this.isBuilding = true;
+                    await new Promise(r => setTimeout(r, 1200));
+
+                    if (this.editingId) {
+                        const idx = this.projects.findIndex(p => p.id === this.editingId);
+                        this.projects[idx].name = this.filename;
+                        this.projects[idx].code = this.rawCode;
+                        // Revoke old URL if it exists
+                        if(this.registry[this.editingId]) URL.revokeObjectURL(this.registry[this.editingId]);
+                    } else {
+                        const id = Date.now();
+                        this.projects.unshift({
+                            id,
+                            name: this.filename,
+                            code: this.rawCode,
+                            url: `${this.filename.split('.')[0]}-${Math.random().toString(36).slice(2,7)}.harmony.dev`
+                        });
+                        this.editingId = id;
+                    }
+
+                    localStorage.setItem('harmony_v10', JSON.stringify(this.projects));
+                    this.isBuilding = false;
+                    this.openProject(this.projects.find(p => p.id === this.editingId));
+                    this.resetEditor();
+                },
+
+                openProject(p) {
+                    this.activeProject = p;
+                    this.previewMode = true;
+
+                    // Revoke old URL for this specific project
+                    if(this.registry[p.id]) URL.revokeObjectURL(this.registry[p.id]);
+
+                    // Create fresh URL
+                    const blob = new Blob([p.code], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    this.registry[p.id] = url;
+
+                    this.$nextTick(() => {
+                        this.$refs.viewport.src = url;
+                    });
+                },
+
+                closePreview() {
+                    this.previewMode = false;
+                },
+
+                editProject(p) {
+                    this.editingId = p.id;
+                    this.filename = p.name;
+                    this.rawCode = p.code;
                     this.view = 'editor';
                 },
 
                 cancelEdit() {
-                    this.editingId = null;
-                    this.filename = 'index.html';
-                    this.rawCode = '';
-                    this.view = 'projects';
-                },
-
-                async deployCode() {
-                    this.isDeploying = true;
-                    await new Promise(r => setTimeout(r, 1000));
-
-                    if (this.editingId) {
-                        const index = this.deployments.findIndex(p => p.id === this.editingId);
-                        this.deployments[index].name = this.filename;
-                        this.deployments[index].code = this.rawCode;
-                        
-                        // KILL old URL if it exists during redeploy
-                        if(this.urlRegistry[this.editingId]) {
-                            URL.revokeObjectURL(this.urlRegistry[this.editingId]);
-                        }
-                    } else {
-                        const newId = Date.now();
-                        const newProj = {
-                            id: newId,
-                            name: this.filename,
-                            code: this.rawCode,
-                            url: `${this.filename.split('.')[0]}-${Math.random().toString(36).slice(2,7)}.harmony.app`
-                        };
-                        this.deployments.unshift(newProj);
-                        this.editingId = newId;
-                    }
-
-                    localStorage.setItem('harmony_v5', JSON.stringify(this.deployments));
-                    this.isDeploying = false;
-                    
-                    this.launch(this.editingId);
-                    
-                    this.editingId = null;
-                    this.rawCode = '';
-                    this.filename = 'index.html';
-                    this.view = 'projects';
+                    this.resetEditor();
+                    this.view = 'archive';
                 },
 
                 deleteProject(id) {
-                    if(confirm('Revoke this deployment? This will expire the link immediately.')) {
-                        // KILL SWITCH: Revoke the URL from memory
-                        if(this.urlRegistry[id]) {
-                            URL.revokeObjectURL(this.urlRegistry[id]);
-                            delete this.urlRegistry[id];
+                    if(confirm('Teardown this deployment?')) {
+                        if(this.registry[id]) {
+                            URL.revokeObjectURL(this.registry[id]);
+                            delete this.registry[id];
                         }
-                        this.deployments = this.deployments.filter(p => p.id !== id);
-                        localStorage.setItem('harmony_v5', JSON.stringify(this.deployments));
+                        this.projects = this.projects.filter(p => p.id !== id);
+                        localStorage.setItem('harmony_v10', JSON.stringify(this.projects));
                     }
                 },
 
-                launch(id) {
-                    const project = this.deployments.find(p => p.id === id);
-                    if(!project) return;
-
-                    // Revoke existing URL for this project before making a new one (Clean refresh)
-                    if(this.urlRegistry[id]) URL.revokeObjectURL(this.urlRegistry[id]);
-
-                    const blob = new Blob([project.code], { type: 'text/html' });
-                    const newUrl = URL.createObjectURL(blob);
-                    
-                    // Register the link
-                    this.urlRegistry[id] = newUrl;
-                    
-                    window.open(newUrl, '_blank');
+                resetEditor() {
+                    this.editingId = null;
+                    this.rawCode = '';
+                    this.filename = 'index.html';
                 }
             }));
         });
